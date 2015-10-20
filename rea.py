@@ -4,7 +4,6 @@ from collections import namedtuple
 
 
 class Path(namedtuple('Path', ['head', 'tail', 'length'])):
-
     @staticmethod
     def from_list(l, *, graph):
         if l is None or l == []:
@@ -13,11 +12,11 @@ class Path(namedtuple('Path', ['head', 'tail', 'length'])):
         if len(l) == 1:
             return Path(head=l[0], tail=None, length=0)
         else:
+            return Path.from_list(l[:-1], graph=graph).prepend(l[-1], graph=graph)
 
-            init, last = Path.from_list(l[:-1], graph=graph), l[-1]
-            edge_length = graph[init.head][last]['weight']
-
-            return Path(head=last, tail=init, length=init.length + edge_length)
+    def prepend(self, node, *, graph):
+        edge_length = graph[self.head][node]['weight']
+        return Path(head=node, tail=self, length=self.length + edge_length)
 
     def __len__(self):
         return 1 if self.tail is None else 1 + len(self.tail)
@@ -40,6 +39,14 @@ class Path(namedtuple('Path', ['head', 'tail', 'length'])):
     def _to_list(self):
         tail_list = [] if self.tail is None else self.tail._to_list()
         return [self.head] + tail_list
+
+    def __eq__(self, other):
+        # ignore length, in case there's a rounding error or something
+        # alternatively, could've used
+        return self.head == other.head and self.tail == other.tail
+
+    def __hash__(self):
+        return hash(tuple(self._to_list()))
 
 
 def create_graph():
@@ -74,24 +81,14 @@ def initialize_rea(G, source):
        with 1 (sic! i.e., human numbering, same as in the paper)."""
     for v in G.nodes_iter():
         distance = nx.dijkstra_path_length(G, source, v)
-        shortest_path = nx.dijkstra_path(G, source, v)
+        raw_shortest_path = nx.dijkstra_path(G, source, v)
+        shortest_path = Path.from_list(raw_shortest_path, graph=G)
 
         # DEBUG
         distance_as_probability = round(math.e ** -distance, 2)
         print("Distance from {} to {}: -{:.3f} => {:.3f}".format(source, v, distance, distance_as_probability))
 
         G.node[v][1] = {'length': distance, 'path': shortest_path}
-
-
-# maybe I should actually implement a class for this ...
-def is_same_path(p1, p2):
-    def to_list(path):
-        if hasattr(path, 'head') and hasattr(path, 'tail'):
-            return path.tail + [path.head]
-        else:
-            return path
-
-    return to_list(p1) == to_list(p2)
 
 
 def rea(G, source, target, k):
@@ -102,24 +99,26 @@ def rea(G, source, target, k):
 
     def compute_next_path(v, iteration):
         if iteration == 2:
-            candidates = set()
 
-            for u in G.predecessors(v):
-                tail_path, tail_length = G.node[u][1]['path'], G.node[u][1]['length']
-                tail_path_last = tail_path[-1]
-                edge_length = G[tail_path_last][v]['weight']
+            shortest_path_to_v = G.node[v][1]['path']
+            shortest_paths_to_pred_plus_edge_to_v = {G.node[u][1]['path'].prepend(v, graph=G) for u in G.predecessors(v)}
+            candidates = shortest_paths_to_pred_plus_edge_to_v.remove(shortest_path_to_v)
 
-                path = Path(head=v, tail=tail_path, length=tail_length + edge_length)
+            # more readable (?) version:
+            #candidates = set()
 
-                if not is_same_path(path, G.node[v][1]['path']):
-                    candidates.add(path)
+            #for u in G.predecessors(v):
+            #    candidate_path = G.node[u][1]['path'].prepend(v, graph=G)
 
-            G.nodes[v][2]['candidates'] = candidates
+            #    if candidate_path != shortest_path_to_v:
+            #        candidates.add(candidate_path)
+
+            G.node[v][2] = {'candidates': candidates}
 
         if iteration != 2 or v != source:
             raise NotImplementedError  # TODO
 
-        if len(G.nodes[v][iteration]['candidates']):
+        if len(G.node[v][iteration]['candidates']):
             raise NotImplementedError  # TODO
         else:
             raise RuntimeError("Path does not exist (k={}, v={})".format(iteration, v))
@@ -136,15 +135,6 @@ if __name__ == "__main__":
     t = 4
     k = 2
 
-    #rea(G, s, t, k)
+    rea(G, s, t, k)
 
-    p0 = Path.from_list([1], graph=G)
-    print(p0)
-    lp0 = p0._to_list()
-    print(lp0)
-    p1 = Path.from_list([1, 2, 4], graph=G)
-    p2 = Path.from_list([1, 2, 4], graph=G)
-
-    debug = p1 == p2
-
-    print(debug)
+    print("Done.")
