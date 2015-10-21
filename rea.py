@@ -28,7 +28,8 @@ class Path:
             return "Path (tail first): {}".format(self.head) + info_str
         else:
             tail_str = self.tail.__str__(head=False)
-            return "{tail} {head}".format(tail=tail_str, head=self.head) + info_str
+            tail_k_str = " [{}] ".format(self.tail_k) if self.tail_k is not None else " "
+            return "{tail}{tail_k}{head}".format(tail=tail_str, tail_k=tail_k_str, head=self.head) + info_str
 
     def __repr__(self):
         return self.__str__()
@@ -133,6 +134,7 @@ def initialize_rea(G, source):
         shortest_path.tail_k = 1
 
         G.node[v][1] = {'path': shortest_path}
+        G.node[v]['candidates'] = set()
 
 
 def rea(G, source, target, k):
@@ -145,7 +147,6 @@ def rea(G, source, target, k):
         # FIXME: this will work, but is it necessary? I should find out
         assert iteration not in G.node[v]
         G.node[v][iteration] = {}
-        G.node[v][iteration]['candidates'] = set()
 
         if iteration == 2:
             shortest_path_to_v = G.node[v][1]['path']
@@ -154,9 +155,14 @@ def rea(G, source, target, k):
                 {G.node[u][1]['path'].prepend(v, tail_k=1) for u in G.predecessors(v)}
             candidates = shortest_paths_to_pred_plus_edge_to_v - {shortest_path_to_v}
 
-            G.node[v][2]['candidates'].update(candidates)
+            G.node[v]['candidates'].update(candidates)
 
         if iteration != 2 or v != source:
+            if 'path' not in G.node[v][iteration - 1]:
+                # uhh... should this ever happen?
+                # let's make it an exception
+                raise RuntimeError("No path to {} in previous iteration {}, skipping.".format(v, iteration - 1))
+
             # consider the previous iteration's path to current node `v`, and
             # specifically the last node (before `v`) in that path
             prev_pred = G.node[v][iteration - 1]['path'].tail.head
@@ -173,11 +179,11 @@ def rea(G, source, target, k):
             if 'path' in G.node[prev_pred][tail_k + 1]:
                 # else there was no path (no candidates)
                 path = G.node[prev_pred][tail_k + 1]['path'].prepend(v, tail_k=tail_k + 1)
-                G.node[v][iteration]['candidates'].add(path)
+                G.node[v]['candidates'].add(path)
 
-        if len(G.node[v][iteration]['candidates']):
-            min_length_candidate = min(G.node[v][iteration]['candidates'], key=lambda p: p.length)
-            G.node[v][iteration]['candidates'].remove(min_length_candidate)
+        if len(G.node[v]['candidates']):
+            min_length_candidate = min(G.node[v]['candidates'], key=lambda p: p.length)
+            G.node[v]['candidates'].remove(min_length_candidate)
             G.node[v][iteration]['path'] = min_length_candidate
         else:
             # TODO: check how to handle this case
