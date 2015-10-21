@@ -18,13 +18,11 @@ class Path:
             self.length = tail.length + graph[tail.head][head]['weight']
             assert self.length > 0
 
-        self.prob = math.e ** (-self.length)
-
     def __len__(self):
         return 1 if self.tail is None else 1 + len(self.tail)
 
     def __str__(self, *, head=True):
-        info_str = " [Prob: {:.3f}]".format(self.prob) if head else ""
+        info_str = " [Prob: {p:.3f}, Weight: {w:.2f}]".format(p=math.e ** (-self.length), w=self.length) if head else ""
 
         if self.tail is None:
             return "Path (tail first): {}".format(self.head) + info_str
@@ -87,6 +85,25 @@ def create_graph():
              (3, 4, {'prob': 0.1}),
              (3, 5, {'prob': 0.4})]
 
+    # DEBUG: let's try another one
+    edges = [( 1,  2, {'weight':  2}),
+             ( 1,  5, {'weight': 13}),
+             ( 2,  3, {'weight': 20}),
+             ( 2,  6, {'weight': 27}),
+             ( 3,  4, {'weight': 14}),
+             ( 3,  7, {'weight': 14}),
+             ( 4,  8, {'weight': 15}),
+             ( 5,  6, {'weight':  9}),
+             ( 5,  9, {'weight': 15}),
+             ( 6,  7, {'weight': 10}),
+             ( 6, 10, {'weight': 20}),
+             ( 7,  8, {'weight': 25}),
+             ( 7, 11, {'weight': 12}),
+             ( 8, 12, {'weight':  7}),
+             ( 9, 10, {'weight': 18}),
+             (10, 11, {'weight':  8}),
+             (11, 12, {'weight': 11})]
+
     G = nx.DiGraph(name="Graph with probabilities and corresponding weights")
     G.add_edges_from(edges)
 
@@ -96,9 +113,10 @@ def create_graph():
     #     ln(0.5)+ln(0.7) == ln(0.5*0.7)
 
     for e in G.edges():
-        probability = G[e[0]][e[1]]['prob']
-        prob_to_weight = abs(math.log(probability))
-        G.add_edge(e[0], e[1], {'weight': prob_to_weight})
+        if 'prob' in G[e[0]][e[1]]:
+            probability = G[e[0]][e[1]]['prob']
+            prob_to_weight = abs(math.log(probability))
+            G.add_edge(e[0], e[1], {'weight': prob_to_weight})
 
     return G
 
@@ -177,8 +195,8 @@ if __name__ == "__main__":
 
     G = create_graph()
     s = 1
-    t = 4
-    k = 5
+    t = 12
+    k = 9
 
     rea(G, s, t, k)
 
