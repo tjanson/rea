@@ -15,21 +15,27 @@ class Path:
         if tail is None:
             self.length = 0
         else:
-            self.length = tail.length + graph[tail.head][head]['weight']
+            self.length = tail.length + self.graph[tail.head][head]['weight']
             assert self.length > 0
 
     def __len__(self):
         return 1 if self.tail is None else 1 + len(self.tail)
 
     def __str__(self, *, head=True):
-        info_str = " [Prob: {p:.3f}, Weight: {w:.2f}]".format(p=math.e ** (-self.length), w=self.length) if head else ""
+        if head:
+            if self.graph.graph['type'] == 'probability':
+                probability = math.e ** (-self.length)
+                prefix = "Path [Prob: {:.3f}]: ".format(probability)
+            else:
+                prefix = "Path [Dist: {:.2f}]: ".format(self.length)
+            return prefix + '"' + self.__str__(head=False) + '"'
 
         if self.tail is None:
-            return "Path (tail first): {}".format(self.head) + info_str
+            return "{}".format(self.head)
         else:
             tail_str = self.tail.__str__(head=False)
             tail_k_str = " [{}] ".format(self.tail_k) if self.tail_k is not None else " "
-            return "{tail}{tail_k}{head}".format(tail=tail_str, tail_k=tail_k_str, head=self.head) + info_str
+            return "{tail}{tail_k}{head}".format(tail=tail_str, tail_k=tail_k_str, head=self.head)
 
     def __repr__(self):
         return self.__str__()
@@ -76,45 +82,17 @@ class Path:
         return p
 
 
-def create_graph():
-    edges = [(1, 2, {'prob': 0.5}),
-             (1, 3, {'prob': 0.5}),
-             (2, 2, {'prob': 0.3}),
-             (2, 3, {'prob': 0.5}),
-             (2, 4, {'prob': 0.2}),
-             (3, 2, {'prob': 0.5}),
-             (3, 4, {'prob': 0.1}),
-             (3, 5, {'prob': 0.4})]
-
-    # DEBUG: let's try another one
-    edges = [( 1,  2, {'weight':  2}),
-             ( 1,  5, {'weight': 13}),
-             ( 2,  3, {'weight': 20}),
-             ( 2,  6, {'weight': 27}),
-             ( 3,  4, {'weight': 14}),
-             ( 3,  7, {'weight': 14}),
-             ( 4,  8, {'weight': 15}),
-             ( 5,  6, {'weight':  9}),
-             ( 5,  9, {'weight': 15}),
-             ( 6,  7, {'weight': 10}),
-             ( 6, 10, {'weight': 20}),
-             ( 7,  8, {'weight': 25}),
-             ( 7, 11, {'weight': 12}),
-             ( 8, 12, {'weight':  7}),
-             ( 9, 10, {'weight': 18}),
-             (10, 11, {'weight':  8}),
-             (11, 12, {'weight': 11})]
-
-    G = nx.DiGraph(name="Graph with probabilities and corresponding weights")
+def create_graph(edges, graph_type, **_):
+    G = nx.DiGraph()
     G.add_edges_from(edges)
+    G.graph['type'] = graph_type
 
     # transform probabilities (i.e. 0<=p<=1) into weights for path length
     # by taking the logarithm and flipping the sign
     # thus, e.g., a path with probabilities 0.5, 0.7 has length:
     #     ln(0.5)+ln(0.7) == ln(0.5*0.7)
-
-    for e in G.edges():
-        if 'prob' in G[e[0]][e[1]]:
+    if G.graph['type'] == 'probability':
+        for e in G.edges():
             probability = G[e[0]][e[1]]['prob']
             prob_to_weight = abs(math.log(probability))
             G.add_edge(e[0], e[1], {'weight': prob_to_weight})
@@ -199,9 +177,48 @@ def rea(G, source, target, k):
 
 if __name__ == "__main__":
 
-    G = create_graph()
-    s = 1
-    t = 12
+    simple = {
+        'edges': [(1, 2, {'prob': 0.5}),
+                  (1, 3, {'prob': 0.5}),
+                  (2, 2, {'prob': 0.3}),
+                  (2, 3, {'prob': 0.5}),
+                  (2, 4, {'prob': 0.2}),
+                  (3, 2, {'prob': 0.5}),
+                  (3, 4, {'prob': 0.1}),
+                  (3, 5, {'prob': 0.4})],
+        'graph_type': 'probability',
+        'source': 1,
+        'target': 4
+    }
+
+    eppstein = {
+        'edges': [( 1,  2, {'weight':  2}),
+                  ( 1,  5, {'weight': 13}),
+                  ( 2,  3, {'weight': 20}),
+                  ( 2,  6, {'weight': 27}),
+                  ( 3,  4, {'weight': 14}),
+                  ( 3,  7, {'weight': 14}),
+                  ( 4,  8, {'weight': 15}),
+                  ( 5,  6, {'weight':  9}),
+                  ( 5,  9, {'weight': 15}),
+                  ( 6,  7, {'weight': 10}),
+                  ( 6, 10, {'weight': 20}),
+                  ( 7,  8, {'weight': 25}),
+                  ( 7, 11, {'weight': 12}),
+                  ( 8, 12, {'weight':  7}),
+                  ( 9, 10, {'weight': 18}),
+                  (10, 11, {'weight':  8}),
+                  (11, 12, {'weight': 11})],
+        'graph_type': 'weight',
+        'source': 1,
+        'target': 12
+    }
+
+    selected_graph = simple
+
+    G = create_graph(**selected_graph)
+    s = selected_graph['source']
+    t = selected_graph['target']
     k = 9
 
     rea(G, s, t, k)
