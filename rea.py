@@ -1,6 +1,3 @@
-# documentation TODO: data structures (esp. tail_k, Path), alg
-# TODO: experiment with leaving off the last node (which is implicit)
-
 import networkx as nx
 from datastructures import Path
 
@@ -35,7 +32,7 @@ def rea(G, source, target, k):
             shortest_path_to_v = G.node[v][1]['path']
 
             shortest_paths_to_pred_plus_edge_to_v = \
-                {G.node[u][1]['path'].prepend(v, tail_k=1) for u in G.predecessors(v)}
+                {G.node[u][1]['path'].append(v, tail_k=1) for u in G.predecessors(v)}
             candidates = shortest_paths_to_pred_plus_edge_to_v - {shortest_path_to_v}
 
             G.node[v]['candidates'].update(candidates)
@@ -59,9 +56,9 @@ def rea(G, source, target, k):
                 compute_next_path(prev_pred, tail_k + 1)
 
             # the result of that (plus an edge to `v`) is a candidate path
+            # (if it exists -- else there was no path (no candidates))
             if 'path' in G.node[prev_pred][tail_k + 1]:
-                # else there was no path (no candidates)
-                path = G.node[prev_pred][tail_k + 1]['path'].prepend(v, tail_k=tail_k + 1)
+                path = G.node[prev_pred][tail_k + 1]['path'].append(v, tail_k=tail_k + 1)
                 G.node[v]['candidates'].add(path)
 
         if len(G.node[v]['candidates']):
@@ -70,8 +67,7 @@ def rea(G, source, target, k):
             G.node[v][iteration]['path'] = min_length_candidate
         else:
             # TODO: check how to handle this case
-            #raise RuntimeError("Path does not exist (k={}, v={})".format(iteration, v))
-            # maybe just don't do anything??
+            # maybe just don't do anything? - yes, that works
             pass
 
     initialize_rea(G, source)

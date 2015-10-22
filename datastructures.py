@@ -2,6 +2,13 @@ import math
 
 
 class Path:
+    # TODO: document, especially `tail_k`
+    #
+    # A path following directed edges from 1 to 4 is represented as a
+    # head (node 4) and a pointer to (the head of) a path from 1 to 3:
+    #     Path: 1 -> 2 -> 3 -> 4
+    #     Repr: [ tail    ] <- [head]
+
     def __init__(self, *, head, tail, tail_k=None, graph):
         self.head = head
         self.tail = tail
@@ -53,27 +60,12 @@ class Path:
         if len(l) == 1:
             return cls(head=l[0], tail=None, graph=graph)
         else:
-            return cls.from_list(l[:-1], graph=graph).prepend(l[-1])
+            return cls.from_list(l[:-1], graph=graph).append(l[-1])
 
     def to_list(self):
         tail_list = [] if self.tail is None else self.tail.to_list()
         return [self.head] + tail_list
 
-    def prepend(self, node, *, tail_k=None):
-        # NOTE: Maybe it's just too late, but I just confused myself:
-        # I've accidentally made the following convention (which is good
-        # for implementation, but somewhat unintuitive):
-        #
-        # A path following directed edges from 1 to 4 is represented as:
-        #     1 -> 2 -> 3 -> 4
-        #     [ tail    ]    [head]
-        #
-        # Nodes are `prepend`ed at the head (so far, so good, right?),
-        # but that's really the "end" of the path.
-        # So, maybe I should rename it to `append`, but that would be
-        # confusing too ...
-        # DOC-FIXME
-        p = Path(head=node, tail=self, tail_k=tail_k, graph=self.graph)
-        assert p.length > 0
-        return p
+    def append(self, node, *, tail_k=None):
+        return Path(head=node, tail=self, tail_k=tail_k, graph=self.graph)
 
