@@ -14,12 +14,12 @@ class Path:
         self.tail = tail
         self.tail_k = tail_k
         self.graph = graph
+        self._hash = None
 
         if tail is None:
             self.length = 0
         else:
             self.length = tail.length + self.graph[tail.head][head]['weight']
-            assert self.length > 0
 
     def __len__(self):
         return 1 if self.tail is None else 1 + len(self.tail)
@@ -49,8 +49,17 @@ class Path:
     def __eq__(self, other):
         return self.head == other.head and self.tail == other.tail
 
+    # TODO: find out if there is a less expensive way for comparison & especially hashing
+    # this is almost certainly a pretty bad hash function, but it doesn't seem to matter much
     def __hash__(self):
-        return hash(tuple(self.to_list()))
+        some_large_number = 541
+
+        if self._hash is None:
+            if self.tail is None:
+                self._hash = self.head % some_large_number
+            else:
+                self._hash = int(str(self.head) + str(hash(self.tail))) % some_large_number
+        return self._hash
 
     @classmethod
     def from_list(cls, l, *, graph):
@@ -68,4 +77,3 @@ class Path:
 
     def append(self, node, *, tail_k=None):
         return Path(head=node, tail=self, tail_k=tail_k, graph=self.graph)
-
