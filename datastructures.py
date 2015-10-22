@@ -52,13 +52,11 @@ class Path:
     # TODO: find out if there is a less expensive way for comparison & especially hashing
     # this is almost certainly a pretty bad hash function, but it doesn't seem to matter much
     def __hash__(self):
-        some_large_number = 541
-
         if self._hash is None:
             if self.tail is None:
-                self._hash = self.head % some_large_number
+                self._hash = hash(self.head)
             else:
-                self._hash = int(str(self.head) + str(hash(self.tail))) % some_large_number
+                self._hash = hash(tuple([self.head, hash(self.tail)]))
         return self._hash
 
     @classmethod
