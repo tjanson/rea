@@ -64,7 +64,7 @@ def create_graph(edges, graph_type, **_):
 
 if __name__ == "__main__":
 
-    selected_graph = simple
+    selected_graph = eppstein
 
     G = create_graph(**selected_graph)
     s = selected_graph['source']
@@ -77,3 +77,4 @@ if __name__ == "__main__":
     recursive_enumeration_algorithm(G, s, t, k)
 
     print("Done.")
+    print("Just as an example, here's the {k}-th shortest path from {s} to {t}:\n{p}".format(k=k, s=s, t=t, p=G.node[t][k]['path']))
