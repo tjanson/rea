@@ -23,12 +23,12 @@ def rea(G, source, target, k):
        Computes the `k` shortest paths from `source` to `target`
        in graph `G`."""
 
-    def compute_next_path(v, iteration):
+    def compute_next_path(v, k):
         # FIXME: this will work, but is it necessary? I should find out
-        assert iteration not in G.node[v]
-        G.node[v][iteration] = {}
+        assert k not in G.node[v]
+        G.node[v][k] = {}
 
-        if iteration == 2:
+        if k == 2:
             shortest_path_to_v = G.node[v][1]['path']
 
             shortest_paths_to_pred_plus_edge_to_v = \
@@ -37,19 +37,19 @@ def rea(G, source, target, k):
 
             G.node[v]['candidates'].update(candidates)
 
-        if iteration != 2 or v != source:
-            if 'path' not in G.node[v][iteration - 1]:
+        if k != 2 or v != source:
+            if 'path' not in G.node[v][k - 1]:
                 # uhh... should this ever happen?
                 # let's make it an exception
-                raise RuntimeError("No path to {} in previous iteration {}, skipping.".format(v, iteration - 1))
+                raise RuntimeError("No path to {} in previous iteration {}, skipping.".format(v, k - 1))
 
             # consider the previous iteration's path to current node `v`, and
             # specifically the last node (before `v`) in that path
-            prev_pred = G.node[v][iteration - 1]['path'].tail.head
+            prev_pred = G.node[v][k - 1]['path'].tail.head
 
             # the path to that `prev_pred` is the `k`-th best path to that
             # node for some `k`
-            tail_k = G.node[v][iteration - 1]['path'].tail_k
+            tail_k = G.node[v][k - 1]['path'].tail_k
 
             if tail_k + 1 not in G.node[prev_pred]:
                 # `tail_k + 1`-th best path to `prev_pred` has not yet been computed
@@ -64,7 +64,7 @@ def rea(G, source, target, k):
         if len(G.node[v]['candidates']):
             min_length_candidate = min(G.node[v]['candidates'], key=lambda p: p.length)
             G.node[v]['candidates'].remove(min_length_candidate)
-            G.node[v][iteration]['path'] = min_length_candidate
+            G.node[v][k]['path'] = min_length_candidate
         else:
             # TODO: check how to handle this case
             # maybe just don't do anything? - yes, that works
