@@ -60,14 +60,16 @@ class Path:
         return self._hash
 
     @classmethod
-    def from_list(cls, l, *, graph):
+    def from_list(cls, l, *, graph, is_shortest):
         if l is None or l == []:
             raise RuntimeError("Attempted to create Path from empty list")
 
+        tail_k = 1 if is_shortest else None
+
         if len(l) == 1:
-            return cls(head=l[0], tail=None, graph=graph)
+            return cls(head=l[0], tail=None, tail_k=tail_k, graph=graph)
         else:
-            return cls.from_list(l[:-1], graph=graph).append(l[-1])
+            return cls.from_list(l[:-1], graph=graph, is_shortest=is_shortest).append(l[-1], tail_k=tail_k)
 
     def to_list(self):
         tail_list = [] if self.tail is None else self.tail.to_list()

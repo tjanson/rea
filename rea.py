@@ -10,8 +10,7 @@ def initialize_rea(G, source):
        with 1 (sic! i.e., human numbering, same as in the paper)."""
     for v in G.nodes_iter():
         raw_shortest_path = nx.dijkstra_path(G, source, v)
-        shortest_path = Path.from_list(raw_shortest_path, graph=G)
-        shortest_path.tail_k = 1
+        shortest_path = Path.from_list(raw_shortest_path, graph=G, is_shortest=True)
 
         G.node[v][1] = {'path': shortest_path}
         G.node[v]['candidates'] = set()
