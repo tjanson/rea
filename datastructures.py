@@ -37,8 +37,8 @@ class Path:
             return "{}".format(self.head)
         else:
             tail_str = self.tail.__str__(head=False)
-            tail_k_str = " [{}] ".format(self.tail_k) if self.tail_k is not None else " "
-            return "{tail}{tail_k}{head}".format(tail=tail_str, tail_k=tail_k_str, head=self.head)
+            tail_k_str = "[k={}]".format(self.tail_k) if self.tail_k is not None else ""
+            return "{tail} {tail_k} -- {head}".format(tail=tail_str, tail_k=tail_k_str, head=self.head)
 
     def __repr__(self):
         return self.__str__()
