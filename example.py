@@ -19,6 +19,49 @@ simple = {
     'target': 4
 }
 
+bsc_small = {
+    'name': "Weighted graph used in my B.Sc. thesis",
+    'edges': [(0,  1, {'weight': 3}),
+              (1,  2, {'weight': 2}),
+              (3,  4, {'weight': 5}),
+              (4,  5, {'weight': 6}),
+              (6,  7, {'weight': 9}),
+              (7,  8, {'weight': 2}),
+              (0,  3, {'weight': 2}),
+              (3,  6, {'weight': 8}),
+              (1,  4, {'weight': 5}),
+              (4,  7, {'weight': 2}),
+              (2,  5, {'weight': 6}),
+              (5,  8, {'weight': 3})],
+    'graph_type': 'weight',
+    'source': 0,
+    'target': 8
+}
+
+bsc = {
+    'name': "Weighted graph used in my B.Sc. thesis",
+    'edges': [( 0,  1, {'weight': 3}),
+              ( 1,  2, {'weight': 2}),
+              ( 3,  4, {'weight': 5}),
+              ( 4,  5, {'weight': 6}),
+              ( 6,  7, {'weight': 9}),
+              ( 7,  8, {'weight': 2}),
+              ( 9, 10, {'weight': 4}),
+              (10, 11, {'weight': 3}),
+              ( 0,  3, {'weight': 2}),
+              ( 3,  6, {'weight': 8}),
+              ( 6,  9, {'weight': 4}),
+              ( 1,  4, {'weight': 5}),
+              ( 4,  7, {'weight': 2}),
+              ( 7, 10, {'weight': 2}),
+              ( 2,  5, {'weight': 6}),
+              ( 5,  8, {'weight': 3}),
+              ( 8, 11, {'weight': 4})],
+    'graph_type': 'weight',
+    'source': 0,
+    'target': 11
+}
+
 eppstein = {
     'name': "Eppstein's weighted example graph",
     'edges': [( 1,  2, {'weight':  2}),
@@ -64,12 +107,12 @@ def create_graph(edges, graph_type, **_):
 
 if __name__ == "__main__":
 
-    selected_graph = eppstein
+    selected_graph = bsc_small
 
     G = create_graph(**selected_graph)
     s = selected_graph['source']
     t = selected_graph['target']
-    k = 9
+    k = 5
 
     print("Computing the {k} shortest paths from {s} to {t} in graph '{name}' ...".format(k=k, s=s, t=t, name=selected_graph['name']))
     print("(No output will be shown. Please use a debugger to step through the algorithm and inspect the results.)")
